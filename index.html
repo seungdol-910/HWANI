@@ -2,202 +2,288 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>똥인가? 하트인가?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이 파스텔 드레스업!</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #a8edd9 0%, #00b4db 100%);
-      min-height: 100vh;
+      background: #f0f4f8;
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100vh;
       padding: 15px;
     }
-    .game-card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 24px;
-      padding: 24px 20px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-      text-align: center;
-      position: relative;
-    }
-    h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; }
-    .subtitle { font-size: 13px; color: #666; margin-bottom: 16px; }
-    .status-board {
+    .game-container {
       display: flex;
-      justify-content: space-around;
-      background: #f1f5f9;
-      padding: 12px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      font-weight: bold;
-      color: #475569;
-    }
-    .status-value { font-weight: 900; color: #0f172a; }
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
-      perspective: 1000px;
-    }
-    .card {
-      aspect-ratio: 1;
-      background: #e2e8f0;
-      border-radius: 16px;
-      cursor: pointer;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .card-front, .card-back {
-      position: absolute;
+      flex-direction: row;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
       width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
+      max-width: 800px;
+      height: 580px;
+      overflow: hidden;
+    }
+    
+    /* 캐릭터 디스플레이 영역 */
+    .character-area {
+      flex: 1;
+      background: #fdf2f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border-right: 2px solid #fbcfe8;
+    }
+    .stage {
+      width: 280px;
+      height: 420px;
+      position: relative;
+    }
+    .layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    
+    /* 메뉴 및 아이템 선택 영역 */
+    .menu-area {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      background: #ffffff;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #831843;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 15px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #f472b6;
+      color: white;
+      box-shadow: 0 4px 10px rgba(244, 114, 182, 0.3);
+    }
+    
+    /* 색상 변경 팔레트 */
+    .color-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      background: #fdf2f8;
+      padding: 8px 12px;
+      border-radius: 12px;
+    }
+    .color-label { font-size: 12px; font-weight: bold; color: #9d174d; }
+    .color-dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    /* 아이템 그리드 목록 */
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 4px;
+      flex: 1;
+    }
+    .item-card {
+      aspect-ratio: 1;
+      background: #fafafa;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
       display: flex;
       justify-content: center;
       align-items: center;
-      border-radius: 16px;
-      font-size: 26px;
-    }
-    .card-front {
-      background: linear-gradient(145deg, #ffffff, #e6e6e6);
-      border: 2px solid #cbd5e1;
-      color: #64748b;
-      font-weight: 900;
-    }
-    .card-back { transform: rotateY(180deg); background: #ffffff; border: 2px solid #94a3b8; }
-    .card.flipped { transform: rotateY(180deg); }
-    .card.poop-card.flipped .card-back { background: #fef3c7; border-color: #f59e0b; }
-    .card.heart-card.flipped .card-back { background: #ffe4e6; border-color: #fb7185; }
-    .card.special-card.flipped .card-back { background: #fef08a; border-color: #eab308; }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background: #10b981;
-      border: none;
-      border-radius: 16px;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    .overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.9);
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      border-radius: 24px; color: white;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    }
-    .overlay.active { opacity: 1; pointer-events: auto; }
-    .overlay-btn {
-      margin-top: 15px; padding: 10px 24px;
-      border-radius: 12px; border: none;
-      background: #3b82f6; color: white; font-weight: bold; cursor: pointer;
+    .item-card:hover { border-color: #f472b6; transform: translateY(-2px); }
+    .item-card.selected { border-color: #ec4899; background: #fce7f3; }
+    .item-card svg { width: 60%; height: 60%; }
+
+    /* 모바일 대응 반응형 */
+    @media (max-width: 650px) {
+      .game-container { flex-direction: column; height: auto; }
+      .character-area { border-right: none; border-bottom: 2px solid #fbcfe8; padding: 20px 0; }
+      .stage { width: 220px; height: 330px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="game-card">
-    <h1>💩 똥이야? 하트야? ❤️</h1>
-    <p class="subtitle">상자를 뒤집어 하트를 찾으세요! 똥을 피해야 합니다.</p>
+  <div class="game-container">
+    <div class="character-area">
+      <div class="stage">
+        <svg class="layer" id="layer-body" viewBox="0 0 200 300">
+          <ellipse cx="100" cy="80" rx="30" ry="35" fill="#fde047" opacity="0.3"/>
+          <circle cx="100" cy="75" r="30" fill="#ffd7ba"/> <circle cx="90" cy="72" r="3" fill="#475569"/> <circle cx="110" cy="72" r="3" fill="#475569"/> <path d="M 96 82 Q 100 87 104 82" stroke="#f43f5e" stroke-width="2" fill="none" stroke-linecap="round"/> <circle cx="85" cy="78" r="4" fill="#f43f5e" opacity="0.3"/> <circle cx="115" cy="78" r="4" fill="#f43f5e" opacity="0.3"/> <rect x="94" y="100" width="12" height="15" fill="#ffd7ba"/> <path d="M 80 115 L 120 115 L 115 180 L 85 180 Z" fill="#ffd7ba"/> <rect x="86" y="180" width="10" height="90" rx="5" fill="#ffd7ba"/> <rect x="104" y="180" width="10" height="90" rx="5" fill="#ffd7ba"/> <path d="M 82 120 Q 100 130 118 120 L 115 140 L 85 140 Z" fill="#ffffff"/>
+          <path d="M 85 165 L 115 165 L 110 182 L 90 182 Z" fill="#ffffff"/>
+        </svg>
 
-    <div class="status-board">
-      <div>점수: <span id="score" class="status-value">0</span></div>
-      <div>목숨: <span id="lives" class="status-value">❤️❤️❤️</span></div>
-      <div>단계: <span id="stage" class="status-value">1</span></div>
+        <svg class="layer" id="layer-bottom" viewBox="0 0 200 300"></svg>
+        <svg class="layer" id="layer-top" viewBox="0 0 200 300"></svg>
+        <svg class="layer" id="layer-shoes" viewBox="0 0 200 300"></svg>
+        <svg class="layer" id="layer-hair" viewBox="0 0 200 300"></svg>
+        <svg class="layer" id="layer-acc" viewBox="0 0 200 300"></svg>
+      </div>
     </div>
 
-    <div class="grid-container" id="grid"></div>
-    <button class="btn" onclick="initGame()">새 게임 시작</button>
+    <div class="menu-area">
+      <div class="title">✨ 마이 스타일링 ✨</div>
 
-    <div class="overlay" id="overlay">
-      <h2 id="overlay-title">게임 오버! 💩</h2>
-      <p id="overlay-msg" style="margin-top:10px;">최종 점수: 0점</p>
-      <button class="overlay-btn" onclick="initGame()">다시 도전하기</button>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchCategory('hair')">헤어</button>
+        <button class="tab-btn" onclick="switchCategory('top')">상의</button>
+        <button class="tab-btn" onclick="switchCategory('bottom')">하의</button>
+        <button class="tab-btn" onclick="switchCategory('shoes')">신발</button>
+        <button class="tab-btn" onclick="switchCategory('acc')">악세서리</button>
+      </div>
+
+      <div class="color-picker">
+        <span class="color-label">색상 변경:</span>
+        <div class="color-dot" style="background: #3b82f6;" onclick="changeColor('#3b82f6')"></div>
+        <div class="color-dot" style="background: #ef4444;" onclick="changeColor('#ef4444')"></div>
+        <div class="color-dot" style="background: #10b981;" onclick="changeColor('#10b981')"></div>
+        <div class="color-dot" style="background: #f59e0b;" onclick="changeColor('#f59e0b')"></div>
+        <div class="color-dot" style="background: #8b5cf6;" onclick="changeColor('#8b5cf6')"></div>
+        <div class="color-dot" style="background: #ec4899;" onclick="changeColor('#ec4899')"></div>
+        <div class="color-dot" style="background: #1e293b;" onclick="changeColor('#1e293b')"></div>
+      </div>
+
+      <div class="item-grid" id="item-grid"></div>
     </div>
   </div>
 
   <script>
-    const GRID_SIZE = 16;
-    let score = 0, lives = 3, stage = 1, flippedCount = 0, targetHearts = 0, isClickable = true;
+    // 현재 선택된 카테고리 및 아이템 상태
+    let currentCategory = 'hair';
+    const state = {
+      hair: { id: null, color: '#f59e0b' },
+      top: { id: null, color: '#ec4899' },
+      bottom: { id: null, color: '#3b82f6' },
+      shoes: { id: null, color: '#1e293b' },
+      acc: { id: null, color: '#ef4444' }
+    };
 
-    function initGame() {
-      score = 0; lives = 3; stage = 1;
-      document.getElementById('overlay').classList.remove('active');
-      setupStage();
+    // 아이템 데이터 (SVG 도형 데이터)
+    const itemsData = {
+      hair: [
+        { id: 'hair1', name: '단발머리', svg: (color) => `<path d="M 65 70 C 65 30, 135 30, 135 70 C 138 95, 125 105, 125 105 C 120 80, 80 80, 75 105 C 75 105, 62 95, 65 70 Z" fill="${color}"/>` },
+        { id: 'hair2', name: '양갈래', svg: (color) => `<path d="M 68 70 C 68 35, 132 35, 132 70 C 120 80, 80 80, 68 70 Z" fill="${color}"/><path d="M 60 70 C 40 80, 45 130, 58 120 Z" fill="${color}"/><path d="M 140 70 C 160 80, 155 130, 142 120 Z" fill="${color}"/>` },
+        { id: 'hair3', name: '롱 헤어', svg: (color) => `<path d="M 65 65 C 65 30, 135 30, 135 65 L 140 150 C 130 150, 125 100, 125 100 C 120 80, 80 80, 75 100 C 75 100, 70 150, 60 150 Z" fill="${color}"/>` }
+      ],
+      top: [
+        { id: 'top1', name: '반팔 티셔츠', svg: (color) => `<path d="M 75 115 L 125 115 L 135 135 L 120 140 L 118 155 L 82 155 L 80 140 L 65 135 Z" fill="${color}"/>` },
+        { id: 'top2', name: '민소매 톱', svg: (color) => `<path d="M 82 115 L 118 115 L 115 155 L 85 155 Z" fill="${color}"/>` },
+        { id: 'top3', name: '후드티', svg: (color) => `<path d="M 72 112 L 128 112 L 140 142 L 122 145 L 118 165 L 82 165 L 78 145 L 60 142 Z" fill="${color}"/><circle cx="100" cy="135" r="8" fill="#ffffff" opacity="0.5"/>` }
+      ],
+      bottom: [
+        { id: 'bottom1', name: '청바지', svg: (color) => `<path d="M 84 155 L 116 155 L 116 235 L 102 235 L 100 175 L 98 175 L 98 235 L 84 235 Z" fill="${color}"/>` },
+        { id: 'bottom2', name: '스커트', svg: (color) => `<path d="M 84 155 L 116 155 L 130 195 L 70 195 Z" fill="${color}"/>` },
+        { id: 'bottom3', name: '반바지', svg: (color) => `<path d="M 84 155 L 116 155 L 120 185 L 101 185 L 100 170 L 99 170 L 98 185 L 80 185 Z" fill="${color}"/>` }
+      ],
+      shoes: [
+        { id: 'shoes1', name: '스니커즈', svg: (color) => `<rect x="83" y="262" width="15" height="12" rx="4" fill="${color}"/><rect x="102" y="262" width="15" height="12" rx="4" fill="${color}"/>` },
+        { id: 'shoes2', name: '구두', svg: (color) => `<path d="M 83 265 Q 90 260 98 270 L 83 270 Z" fill="${color}"/><path d="M 102 265 Q 110 260 117 270 L 102 270 Z" fill="${color}"/>` }
+      ],
+      acc: [
+        { id: 'acc1', name: '안경', svg: (color) => `<circle cx="88" cy="72" r="8" stroke="${color}" stroke-width="2" fill="none"/><circle cx="112" cy="72" r="8" stroke="${color}" stroke-width="2" fill="none"/><line x1="96" y1="72" x2="104" y2="72" stroke="${color}" stroke-width="2"/>` },
+        { id: 'acc2', name: '리본 헤어핀', svg: (color) => `<path d="M 115 50 L 125 45 L 125 55 Z" fill="${color}"/><path d="M 135 50 L 125 45 L 125 55 Z" fill="${color}"/><circle cx="125" cy="50" r="3" fill="#ffffff"/>` }
+      ]
+    };
+
+    // 탭 변경
+    function switchCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderItemList();
     }
 
-    function setupStage() {
-      flippedCount = 0; isClickable = true;
-      const gridEl = document.getElementById('grid');
-      gridEl.innerHTML = '';
-      
-      document.getElementById('score').textContent = score;
-      document.getElementById('stage').textContent = stage;
-      updateLives();
+    // 아이템 리스트 생성
+    function renderItemList() {
+      const grid = document.getElementById('item-grid');
+      grid.innerHTML = '';
 
-      let poopCount = Math.min(3 + stage, 8); 
-      let goldHeartCount = 1;
-      let heartCount = GRID_SIZE - poopCount - goldHeartCount;
-      targetHearts = heartCount + goldHeartCount;
-
-      let cardsData = [];
-      for (let i = 0; i < poopCount; i++) cardsData.push({ type: 'poop', icon: '💩', score: -50 });
-      for (let i = 0; i < heartCount; i++) cardsData.push({ type: 'heart', icon: '❤️', score: 100 });
-      for (let i = 0; i < goldHeartCount; i++) cardsData.push({ type: 'special', icon: '💖', score: 300 });
-
-      cardsData.sort(() => Math.random() - 0.5);
-
-      cardsData.forEach(data => {
+      const list = itemsData[currentCategory];
+      list.forEach(item => {
         const card = document.createElement('div');
-        card.className = `card ${data.type}-card`;
-        card.innerHTML = `<div class="card-front">?</div><div class="card-back">${data.icon}</div>`;
-        card.onclick = () => {
-          if (!isClickable || card.classList.contains('flipped')) return;
-          card.classList.add('flipped');
-
-          if (data.type === 'poop') {
-            lives--;
-            score = Math.max(0, score + data.score);
-            updateLives();
-            if (lives <= 0) {
-              isClickable = false;
-              setTimeout(showGameOver, 500);
-            }
-          } else {
-            score += data.score;
-            flippedCount++;
-            document.getElementById('score').textContent = score;
-            if (flippedCount === targetHearts) {
-              isClickable = false;
-              setTimeout(() => { stage++; setupStage(); }, 600);
-            }
-          }
-        };
-        gridEl.appendChild(card);
+        card.className = `item-card ${state[currentCategory].id === item.id ? 'selected' : ''}`;
+        
+        // 미리보기 아이콘 생성
+        card.innerHTML = `<svg viewBox="0 0 200 300">${item.svg(state[currentCategory].color)}</svg>`;
+        
+        card.onclick = () => selectItem(item);
+        grid.appendChild(card);
       });
     }
 
-    function updateLives() {
-      document.getElementById('lives').textContent = '❤️'.repeat(lives) || '💀';
+    // 아이템 선택/해제 토글
+    function selectItem(item) {
+      if (state[currentCategory].id === item.id) {
+        state[currentCategory].id = null; // 이미 선택된 경우 벗기기
+      } else {
+        state[currentCategory].id = item.id; // 입히기
+      }
+      renderItemList();
+      updateCharacterLayer(currentCategory);
     }
 
-    function showGameOver() {
-      document.getElementById('overlay-title').textContent = '게임 오버! 💩';
-      document.getElementById('overlay-msg').textContent = `최종 점수: ${score}점 (단계: ${stage})`;
-      document.getElementById('overlay').classList.add('active');
+    // 선택된 색상 적용
+    function changeColor(color) {
+      state[currentCategory].color = color;
+      renderItemList();
+      updateCharacterLayer(currentCategory);
     }
 
-    initGame();
+    // 캐릭터 레이어 업데이트
+    function updateCharacterLayer(cat) {
+      const layer = document.getElementById(`layer-${cat}`);
+      const currentId = state[cat].id;
+      
+      if (!currentId) {
+        layer.innerHTML = '';
+        return;
+      }
+
+      const item = itemsData[cat].find(i => i.id === currentId);
+      if (item) {
+        layer.innerHTML = item.svg(state[cat].color);
+      }
+    }
+
+    // 초기 화면 생성
+    renderItemList();
   </script>
 </body>
 </html>
