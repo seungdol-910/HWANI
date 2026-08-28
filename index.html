@@ -2,288 +2,278 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>마이 파스텔 드레스업!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>말랑 미용실 - 머리 자르기 게임</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f4f8;
+      background: #fbcfe8;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 15px;
+      padding: 10px;
     }
-    .game-container {
-      display: flex;
-      flex-direction: row;
+    .salon-container {
       background: white;
       border-radius: 24px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 800px;
-      height: 580px;
-      overflow: hidden;
-    }
-    
-    /* 캐릭터 디스플레이 영역 */
-    .character-area {
-      flex: 1;
-      background: #fdf2f8;
+      padding: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      position: relative;
-      border-right: 2px solid #fbcfe8;
+      max-width: 420px;
+      width: 100%;
     }
-    .stage {
-      width: 280px;
-      height: 420px;
-      position: relative;
-    }
-    .layer {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
+    h1 { font-size: 20px; color: #831843; margin-bottom: 12px; }
     
-    /* 메뉴 및 아이템 선택 영역 */
-    .menu-area {
-      flex: 1.2;
+    /* 도구 아이콘 바 */
+    .toolbar {
       display: flex;
-      flex-direction: column;
-      padding: 20px;
-      background: #ffffff;
-    }
-    .title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #831843;
-      margin-bottom: 12px;
-      text-align: center;
-    }
-    .tabs {
-      display: flex;
-      gap: 6px;
+      gap: 8px;
       margin-bottom: 15px;
+      width: 100%;
+      justify-content: center;
     }
-    .tab-btn {
+    .tool-btn {
       flex: 1;
-      padding: 10px 0;
-      background: #f1f5f9;
-      border: none;
+      padding: 10px 4px;
+      border: 2px solid #f472b6;
+      background: white;
       border-radius: 12px;
       font-size: 13px;
       font-weight: bold;
-      color: #64748b;
+      color: #9d174d;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .tab-btn.active {
+    .tool-btn.active {
       background: #f472b6;
       color: white;
-      box-shadow: 0 4px 10px rgba(244, 114, 182, 0.3);
     }
-    
-    /* 색상 변경 팔레트 */
-    .color-picker {
+
+    /* 색상 팔레트 */
+    .color-bar {
       display: flex;
-      align-items: center;
       gap: 8px;
       margin-bottom: 15px;
-      background: #fdf2f8;
-      padding: 8px 12px;
-      border-radius: 12px;
     }
-    .color-label { font-size: 12px; font-weight: bold; color: #9d174d; }
     .color-dot {
       width: 24px; height: 24px;
       border-radius: 50%;
       cursor: pointer;
       border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    /* 아이템 그리드 목록 */
-    .item-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      overflow-y: auto;
-      padding-right: 4px;
-      flex: 1;
+    /* 캔버스 영역 */
+    canvas {
+      border-radius: 20px;
+      background: #fff1f2;
+      cursor: crosshair;
+      touch-action: none;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
     }
-    .item-card {
-      aspect-ratio: 1;
-      background: #fafafa;
-      border: 2px solid #e2e8f0;
-      border-radius: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+
+    .reset-btn {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: #e11d48;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
       cursor: pointer;
-      transition: all 0.2s;
-    }
-    .item-card:hover { border-color: #f472b6; transform: translateY(-2px); }
-    .item-card.selected { border-color: #ec4899; background: #fce7f3; }
-    .item-card svg { width: 60%; height: 60%; }
-
-    /* 모바일 대응 반응형 */
-    @media (max-width: 650px) {
-      .game-container { flex-direction: column; height: auto; }
-      .character-area { border-right: none; border-bottom: 2px solid #fbcfe8; padding: 20px 0; }
-      .stage { width: 220px; height: 330px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="game-container">
-    <div class="character-area">
-      <div class="stage">
-        <svg class="layer" id="layer-body" viewBox="0 0 200 300">
-          <ellipse cx="100" cy="80" rx="30" ry="35" fill="#fde047" opacity="0.3"/>
-          <circle cx="100" cy="75" r="30" fill="#ffd7ba"/> <circle cx="90" cy="72" r="3" fill="#475569"/> <circle cx="110" cy="72" r="3" fill="#475569"/> <path d="M 96 82 Q 100 87 104 82" stroke="#f43f5e" stroke-width="2" fill="none" stroke-linecap="round"/> <circle cx="85" cy="78" r="4" fill="#f43f5e" opacity="0.3"/> <circle cx="115" cy="78" r="4" fill="#f43f5e" opacity="0.3"/> <rect x="94" y="100" width="12" height="15" fill="#ffd7ba"/> <path d="M 80 115 L 120 115 L 115 180 L 85 180 Z" fill="#ffd7ba"/> <rect x="86" y="180" width="10" height="90" rx="5" fill="#ffd7ba"/> <rect x="104" y="180" width="10" height="90" rx="5" fill="#ffd7ba"/> <path d="M 82 120 Q 100 130 118 120 L 115 140 L 85 140 Z" fill="#ffffff"/>
-          <path d="M 85 165 L 115 165 L 110 182 L 90 182 Z" fill="#ffffff"/>
-        </svg>
+  <div class="salon-container">
+    <h1>✂️ 말랑 헤어 뷰티샵 💇‍♀️</h1>
 
-        <svg class="layer" id="layer-bottom" viewBox="0 0 200 300"></svg>
-        <svg class="layer" id="layer-top" viewBox="0 0 200 300"></svg>
-        <svg class="layer" id="layer-shoes" viewBox="0 0 200 300"></svg>
-        <svg class="layer" id="layer-hair" viewBox="0 0 200 300"></svg>
-        <svg class="layer" id="layer-acc" viewBox="0 0 200 300"></svg>
-      </div>
+    <div class="toolbar">
+      <button class="tool-btn active" onclick="setTool('scissors')">✂️ 가위</button>
+      <button class="tool-btn" onclick="setTool('grow')">🧪 쑥쑥약</button>
+      <button class="tool-btn" onclick="setTool('dye')">🎨 염색약</button>
     </div>
 
-    <div class="menu-area">
-      <div class="title">✨ 마이 스타일링 ✨</div>
-
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchCategory('hair')">헤어</button>
-        <button class="tab-btn" onclick="switchCategory('top')">상의</button>
-        <button class="tab-btn" onclick="switchCategory('bottom')">하의</button>
-        <button class="tab-btn" onclick="switchCategory('shoes')">신발</button>
-        <button class="tab-btn" onclick="switchCategory('acc')">악세서리</button>
-      </div>
-
-      <div class="color-picker">
-        <span class="color-label">색상 변경:</span>
-        <div class="color-dot" style="background: #3b82f6;" onclick="changeColor('#3b82f6')"></div>
-        <div class="color-dot" style="background: #ef4444;" onclick="changeColor('#ef4444')"></div>
-        <div class="color-dot" style="background: #10b981;" onclick="changeColor('#10b981')"></div>
-        <div class="color-dot" style="background: #f59e0b;" onclick="changeColor('#f59e0b')"></div>
-        <div class="color-dot" style="background: #8b5cf6;" onclick="changeColor('#8b5cf6')"></div>
-        <div class="color-dot" style="background: #ec4899;" onclick="changeColor('#ec4899')"></div>
-        <div class="color-dot" style="background: #1e293b;" onclick="changeColor('#1e293b')"></div>
-      </div>
-
-      <div class="item-grid" id="item-grid"></div>
+    <div class="color-bar">
+      <div class="color-dot" style="background:#f59e0b;" onclick="setColor('#f59e0b')"></div>
+      <div class="color-dot" style="background:#ef4444;" onclick="setColor('#ef4444')"></div>
+      <div class="color-dot" style="background:#ec4899;" onclick="setColor('#ec4899')"></div>
+      <div class="color-dot" style="background:#3b82f6;" onclick="setColor('#3b82f6')"></div>
+      <div class="color-dot" style="background:#10b981;" onclick="setColor('#10b981')"></div>
+      <div class="color-dot" style="background:#1e293b;" onclick="setColor('#1e293b')"></div>
     </div>
+
+    <canvas id="hairCanvas" width="360" height="420"></canvas>
+
+    <button class="reset-btn" onclick="initHair()">처음 상태로 되돌리기</button>
   </div>
 
   <script>
-    // 현재 선택된 카테고리 및 아이템 상태
-    let currentCategory = 'hair';
-    const state = {
-      hair: { id: null, color: '#f59e0b' },
-      top: { id: null, color: '#ec4899' },
-      bottom: { id: null, color: '#3b82f6' },
-      shoes: { id: null, color: '#1e293b' },
-      acc: { id: null, color: '#ef4444' }
-    };
+    const canvas = document.getElementById('hairCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // 아이템 데이터 (SVG 도형 데이터)
-    const itemsData = {
-      hair: [
-        { id: 'hair1', name: '단발머리', svg: (color) => `<path d="M 65 70 C 65 30, 135 30, 135 70 C 138 95, 125 105, 125 105 C 120 80, 80 80, 75 105 C 75 105, 62 95, 65 70 Z" fill="${color}"/>` },
-        { id: 'hair2', name: '양갈래', svg: (color) => `<path d="M 68 70 C 68 35, 132 35, 132 70 C 120 80, 80 80, 68 70 Z" fill="${color}"/><path d="M 60 70 C 40 80, 45 130, 58 120 Z" fill="${color}"/><path d="M 140 70 C 160 80, 155 130, 142 120 Z" fill="${color}"/>` },
-        { id: 'hair3', name: '롱 헤어', svg: (color) => `<path d="M 65 65 C 65 30, 135 30, 135 65 L 140 150 C 130 150, 125 100, 125 100 C 120 80, 80 80, 75 100 C 75 100, 70 150, 60 150 Z" fill="${color}"/>` }
-      ],
-      top: [
-        { id: 'top1', name: '반팔 티셔츠', svg: (color) => `<path d="M 75 115 L 125 115 L 135 135 L 120 140 L 118 155 L 82 155 L 80 140 L 65 135 Z" fill="${color}"/>` },
-        { id: 'top2', name: '민소매 톱', svg: (color) => `<path d="M 82 115 L 118 115 L 115 155 L 85 155 Z" fill="${color}"/>` },
-        { id: 'top3', name: '후드티', svg: (color) => `<path d="M 72 112 L 128 112 L 140 142 L 122 145 L 118 165 L 82 165 L 78 145 L 60 142 Z" fill="${color}"/><circle cx="100" cy="135" r="8" fill="#ffffff" opacity="0.5"/>` }
-      ],
-      bottom: [
-        { id: 'bottom1', name: '청바지', svg: (color) => `<path d="M 84 155 L 116 155 L 116 235 L 102 235 L 100 175 L 98 175 L 98 235 L 84 235 Z" fill="${color}"/>` },
-        { id: 'bottom2', name: '스커트', svg: (color) => `<path d="M 84 155 L 116 155 L 130 195 L 70 195 Z" fill="${color}"/>` },
-        { id: 'bottom3', name: '반바지', svg: (color) => `<path d="M 84 155 L 116 155 L 120 185 L 101 185 L 100 170 L 99 170 L 98 185 L 80 185 Z" fill="${color}"/>` }
-      ],
-      shoes: [
-        { id: 'shoes1', name: '스니커즈', svg: (color) => `<rect x="83" y="262" width="15" height="12" rx="4" fill="${color}"/><rect x="102" y="262" width="15" height="12" rx="4" fill="${color}"/>` },
-        { id: 'shoes2', name: '구두', svg: (color) => `<path d="M 83 265 Q 90 260 98 270 L 83 270 Z" fill="${color}"/><path d="M 102 265 Q 110 260 117 270 L 102 270 Z" fill="${color}"/>` }
-      ],
-      acc: [
-        { id: 'acc1', name: '안경', svg: (color) => `<circle cx="88" cy="72" r="8" stroke="${color}" stroke-width="2" fill="none"/><circle cx="112" cy="72" r="8" stroke="${color}" stroke-width="2" fill="none"/><line x1="96" y1="72" x2="104" y2="72" stroke="${color}" stroke-width="2"/>` },
-        { id: 'acc2', name: '리본 헤어핀', svg: (color) => `<path d="M 115 50 L 125 45 L 125 55 Z" fill="${color}"/><path d="M 135 50 L 125 45 L 125 55 Z" fill="${color}"/><circle cx="125" cy="50" r="3" fill="#ffffff"/>` }
-      ]
-    };
+    let currentTool = 'scissors';
+    let currentColor = '#f59e0b';
+    let isDrawing = false;
 
-    // 탭 변경
-    function switchCategory(cat) {
-      currentCategory = cat;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    // 머리카락 줄기 데이터
+    let hairs = [];
+    const HAIR_COUNT = 90; // 머리카락 가닥 수
+
+    function setTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      renderItemList();
     }
 
-    // 아이템 리스트 생성
-    function renderItemList() {
-      const grid = document.getElementById('item-grid');
-      grid.innerHTML = '';
+    function setColor(color) {
+      currentColor = color;
+    }
 
-      const list = itemsData[currentCategory];
-      list.forEach(item => {
-        const card = document.createElement('div');
-        card.className = `item-card ${state[currentCategory].id === item.id ? 'selected' : ''}`;
-        
-        // 미리보기 아이콘 생성
-        card.innerHTML = `<svg viewBox="0 0 200 300">${item.svg(state[currentCategory].color)}</svg>`;
-        
-        card.onclick = () => selectItem(item);
-        grid.appendChild(card);
+    // 초기 머리카락 생성
+    function initHair() {
+      hairs = [];
+      const startX = 80;
+      const endX = 280;
+      const step = (endX - startX) / HAIR_COUNT;
+
+      for (let i = 0; i < HAIR_COUNT; i++) {
+        let x = startX + i * step;
+        let points = [];
+        let length = 180 + Math.random() * 40; // 머리 길이
+
+        for (let j = 0; j < length; j += 5) {
+          points.push({
+            x: x + Math.sin(j * 0.05) * 3, // 약간의 곱슬 느낌
+            y: 110 + j
+          });
+        }
+
+        hairs.push({
+          points: points,
+          color: currentColor,
+          maxLen: length
+        });
+      }
+      drawScene();
+    }
+
+    // 캐릭터 및 머리카락 그리기
+    function drawScene() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. 캐릭터 얼굴 그리기
+      // 목
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(165, 230, 30, 50);
+      
+      // 얼굴
+      ctx.fillStyle = '#ffedd5';
+      ctx.beginPath();
+      ctx.arc(180, 170, 65, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 눈 & 입
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.arc(155, 165, 6, 0, Math.PI * 2); // 왼쪽 눈
+      ctx.arc(205, 165, 6, 0, Math.PI * 2); // 오른쪽 눈
+      ctx.fill();
+
+      // 볼터치
+      ctx.fillStyle = '#f43f5e';
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.arc(145, 180, 10, 0, Math.PI * 2);
+      ctx.arc(215, 180, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+
+      // 웃는 입
+      ctx.strokeStyle = '#f43f5e';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(180, 180, 12, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+
+      // 2. 머리카락 그리기
+      hairs.forEach(hair => {
+        if (hair.points.length < 2) return;
+
+        ctx.strokeStyle = hair.color;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(hair.points[0].x, hair.points[0].y);
+
+        for (let i = 1; i < hair.points.length; i++) {
+          ctx.lineTo(hair.points[i].x, hair.points[i].y);
+        }
+        ctx.stroke();
       });
     }
 
-    // 아이템 선택/해제 토글
-    function selectItem(item) {
-      if (state[currentCategory].id === item.id) {
-        state[currentCategory].id = null; // 이미 선택된 경우 벗기기
-      } else {
-        state[currentCategory].id = item.id; // 입히기
-      }
-      renderItemList();
-      updateCharacterLayer(currentCategory);
+    // 마우스/터치 인터랙션 처리
+    function handleAction(x, y) {
+      hairs.forEach(hair => {
+        for (let i = hair.points.length - 1; i >= 0; i--) {
+          let p = hair.points[i];
+          let dist = Math.hypot(p.x - x, p.y - y);
+
+          // 1. 가위: 마우스 근처 머리카락 잘라내기
+          if (currentTool === 'scissors' && dist < 15) {
+            hair.points = hair.points.slice(0, i);
+            break;
+          }
+          
+          // 2. 쑥쑥약: 머리카락 다시 자라게 하기
+          if (currentTool === 'grow' && dist < 25) {
+            if (hair.points.length * 5 < hair.maxLen) {
+              let lastP = hair.points[hair.points.length - 1] || { x: p.x, y: 110 };
+              hair.points.push({
+                x: lastP.x + (Math.random() - 0.5) * 2,
+                y: lastP.y + 5
+              });
+            }
+          }
+
+          // 3. 염색약: 머리카락 색상 변경
+          if (currentTool === 'dye' && dist < 20) {
+            hair.color = currentColor;
+          }
+        }
+      });
+
+      drawScene();
     }
 
-    // 선택된 색상 적용
-    function changeColor(color) {
-      state[currentCategory].color = color;
-      renderItemList();
-      updateCharacterLayer(currentCategory);
+    // 이벤트 리스너 (PC 마우스 & 모바일 터치 지원)
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
     }
 
-    // 캐릭터 레이어 업데이트
-    function updateCharacterLayer(cat) {
-      const layer = document.getElementById(`layer-${cat}`);
-      const currentId = state[cat].id;
-      
-      if (!currentId) {
-        layer.innerHTML = '';
-        return;
-      }
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; const pos = getPos(e); handleAction(pos.x, pos.y); });
+    canvas.addEventListener('mousemove', (e) => { if (isDrawing) { const pos = getPos(e); handleAction(pos.x, pos.y); } });
+    window.addEventListener('mouseup', () => isDrawing = false);
 
-      const item = itemsData[cat].find(i => i.id === currentId);
-      if (item) {
-        layer.innerHTML = item.svg(state[cat].color);
-      }
-    }
+    canvas.addEventListener('touchstart', (e) => { isDrawing = true; const pos = getPos(e); handleAction(pos.x, pos.y); });
+    canvas.addEventListener('touchmove', (e) => { if (isDrawing) { const pos = getPos(e); handleAction(pos.x, pos.y); } });
+    window.addEventListener('touchend', () => isDrawing = false);
 
-    // 초기 화면 생성
-    renderItemList();
+    // 실행
+    initHair();
   </script>
 </body>
 </html>
