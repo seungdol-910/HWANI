@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>네온 사이버 러너 (Neon Runner)</title>
+  <title>울트라 똥 피하기 (Ultra Poop Dodge)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
-      background: #090a0f;
+      background: #0f172a;
       color: #fff;
       font-family: 'Pretendard', -apple-system, sans-serif;
       display: flex;
@@ -16,101 +16,90 @@
       min-height: 100vh;
       overflow: hidden;
     }
-    .game-wrapper {
+    .game-card {
       position: relative;
       width: 100%;
-      max-width: 800px;
-      height: 450px;
-      border-radius: 20px;
+      max-width: 440px;
+      height: 650px;
+      background: #1e293b;
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 0 50px rgba(0, 243, 255, 0.2), 0 0 20px rgba(255, 0, 85, 0.2);
-      border: 2px solid rgba(0, 243, 255, 0.3);
-      background: #000;
-    }
-    canvas { width: 100%; height: 100%; display: block; }
-    
-    /* UI Overlay */
-    .ui-layer {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      border: 2px solid rgba(255,255,255,0.1);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
     }
+    canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
     .hud {
+      position: absolute;
+      top: 0; left: 0; width: 100%;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
-      font-size: 20px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0) 100%);
+      font-size: 18px;
       font-weight: 800;
-      text-shadow: 0 0 10px rgba(0, 243, 255, 0.8);
-      color: #00f3ff;
+      pointer-events: none;
+      z-index: 5;
     }
-    .start-screen, .game-over-screen {
+    .hud div { text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(9, 10, 15, 0.85);
+      background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      pointer-events: auto;
+      padding: 20px;
+      text-align: center;
+      z-index: 10;
       transition: opacity 0.3s;
     }
     .hidden { opacity: 0; pointer-events: none; }
-    h1 {
-      font-size: 40px;
-      margin-bottom: 10px;
-      background: linear-gradient(45deg, #00f3ff, #ff0055);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 20px rgba(0,243,255,0.5);
-    }
-    p { color: #a0aec0; margin-bottom: 25px; font-size: 15px; }
+    h1 { font-size: 36px; color: #fbbf24; margin-bottom: 10px; text-shadow: 0 0 15px rgba(251,191,36,0.4); }
+    p { color: #94a3b8; margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
     .btn {
       padding: 14px 36px;
       font-size: 18px;
       font-weight: 800;
-      color: #000;
-      background: #00f3ff;
+      color: #0f172a;
+      background: #fbbf24;
       border: none;
       border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
       transition: all 0.2s;
     }
-    .btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 243, 255, 0.9); }
+    .btn:hover { transform: scale(1.05); }
   </style>
 </head>
 <body>
 
-  <div class="game-wrapper">
-    <canvas id="gameCanvas" width="800" height="450"></canvas>
+  <div class="game-card">
+    <canvas id="dodgeCanvas" width="440" height="650"></canvas>
     
-    <div class="ui-layer">
-      <div class="hud">
-        <div>SCORE: <span id="scoreText">0</span></div>
-        <div>LIVES: <span id="livesText">❤️❤️❤️</span></div>
-      </div>
+    <div class="hud">
+      <div style="color: #fbbf24;">SCORE: <span id="scoreText">0</span></div>
+      <div>HP: <span id="hpText">❤️❤️❤️</span></div>
     </div>
 
-    <div class="start-screen" id="startScreen">
-      <h1>NEON RUNNER</h1>
-      <p>점프: 스페이스바 / 화면 터치 | 슬라이딩: 아래 화살표</p>
+    <div class="overlay" id="startScreen">
+      <h1>💩 똥 피하기 💩</h1>
+      <p>좌우 화살표 키, 마우스 드래그, 또는<br>화면 터치로 캐릭터를 움직이세요!<br><br>⭐️ 별: 무적 피버 타임 | 💊 약: 체력 회복</p>
       <button class="btn" onclick="startGame()">GAME START</button>
     </div>
 
-    <div class="game-over-screen hidden" id="gameOverScreen">
-      <h1 style="background: linear-gradient(45deg, #ff0055, #ffaa00); -webkit-background-clip: text;">GAME OVER</h1>
-      <p id="finalScoreText">SCORE: 0</p>
-      <button class="btn" style="background:#ff0055; box-shadow: 0 0 20px rgba(255,0,85,0.6);" onclick="startGame()">RETRY</button>
+    <div class="overlay hidden" id="gameOverScreen">
+      <h1 style="color: #f43f5e;">GAME OVER</h1>
+      <p id="finalScoreText" style="font-size: 22px; color: white; margin-bottom: 20px;">SCORE: 0</p>
+      <button class="btn" onclick="startGame()">RETRY</button>
     </div>
   </div>
 
   <script>
-    // Web Audio API 효과음 엔진
+    // Web Audio API 효과음 생성기
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
 
@@ -120,229 +109,225 @@
       const gain = audioCtx.createGain();
       osc.connect(gain);
       gain.connect(audioCtx.destination);
-
       const now = audioCtx.currentTime;
-      if (type === 'jump') {
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now); osc.stop(now + 0.15);
-      } else if (type === 'coin') {
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.setValueAtTime(1200, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
-      } else if (type === 'hit') {
+
+      if (type === 'hit') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(120, now);
-        osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
         gain.gain.setValueAtTime(0.4, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
         osc.start(now); osc.stop(now + 0.2);
+      } else if (type === 'item') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.setValueAtTime(900, now + 0.08);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      } else if (type === 'fever') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.linearRampToValueAtTime(1000, now + 0.3);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
       }
     }
 
-    const canvas = document.getElementById('gameCanvas');
+    const canvas = document.getElementById('dodgeCanvas');
     const ctx = canvas.getContext('2d');
 
     let gameRunning = false;
     let score = 0;
-    let lives = 3;
-    let gameSpeed = 6;
+    let hp = 3;
     let frameCount = 0;
+    let feverTimer = 0;
 
-    // 플레이어 객체
+    // 플레이어
     const player = {
-      x: 100, y: 300, w: 40, h: 50,
-      vy: 0, gravity: 0.8, jumpPower: -14,
-      isGrounded: false, isCrouching: false,
-      trail: []
+      x: 220, y: 570, radius: 20, speed: 7,
+      targetX: 220, isMovingLeft: false, isMovingRight: false
     };
 
-    let obstacles = [];
-    let items = [];
+    let fallingObjects = [];
     let particles = [];
-
-    // 배경 그리드 선
-    let bgOffset = 0;
 
     function startGame() {
       document.getElementById('startScreen').classList.add('hidden');
       document.getElementById('gameOverScreen').classList.add('hidden');
-      
-      score = 0; lives = 3; gameSpeed = 6; frameCount = 0;
-      obstacles = []; items = []; particles = [];
-      player.y = 300; player.vy = 0;
-      
-      updateUI();
+      score = 0; hp = 3; frameCount = 0; feverTimer = 0;
+      fallingObjects = []; particles = [];
+      player.x = 220; player.targetX = 220;
+      updateHUD();
       gameRunning = true;
       requestAnimationFrame(gameLoop);
     }
 
-    function updateUI() {
+    function updateHUD() {
       document.getElementById('scoreText').textContent = Math.floor(score);
-      document.getElementById('livesText').textContent = '❤️'.repeat(lives);
+      document.getElementById('hpText').textContent = '❤️'.repeat(Math.max(0, hp));
     }
 
-    // 입력 이벤트
-    function handleJump() {
-      if (!gameRunning) return;
-      if (player.isGrounded) {
-        player.vy = player.jumpPower;
-        player.isGrounded = false;
-        playSound('jump');
-        createParticles(player.x + player.w/2, player.y + player.h, '#00f3ff', 10);
-      }
-    }
-
+    // 컨트롤 이벤트
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp') handleJump();
-      if (e.code === 'ArrowDown') { player.isCrouching = true; player.h = 25; }
+      if (e.code === 'ArrowLeft') player.isMovingLeft = true;
+      if (e.code === 'ArrowRight') player.isMovingRight = true;
     });
-
     window.addEventListener('keyup', (e) => {
-      if (e.code === 'ArrowDown') { player.isCrouching = false; player.h = 50; }
+      if (e.code === 'ArrowLeft') player.isMovingLeft = false;
+      if (e.code === 'ArrowRight') player.isMovingRight = false;
     });
 
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleJump(); });
+    // 마우스 및 터치 제어
+    function handlePointer(e) {
+      if (!gameRunning) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      player.targetX = clientX - rect.left;
+    }
+    canvas.addEventListener('mousemove', handlePointer);
+    canvas.addEventListener('touchmove', handlePointer);
+
+    function spawnObject() {
+      const rand = Math.random();
+      let type = 'poop';
+      let size = 18 + Math.random() * 8;
+      let speed = 3.5 + Math.random() * 3 + (score / 300);
+
+      if (rand < 0.05) {
+        type = 'star'; size = 16; // 무적 피버
+      } else if (rand < 0.09) {
+        type = 'heal'; size = 16; // 체력 회복
+      } else if (rand < 0.18) {
+        type = 'king_poop'; size = 32; speed *= 1.2; // 거대 똥
+      }
+
+      fallingObjects.push({
+        x: Math.random() * (canvas.width - 40) + 20,
+        y: -30, type, size, speed,
+        rotation: 0, rotSpeed: (Math.random() - 0.5) * 0.1
+      });
+    }
 
     function createParticles(x, y, color, count) {
       for (let i = 0; i < count; i++) {
         particles.push({
           x, y,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6,
-          size: Math.random() * 4 + 2,
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          radius: Math.random() * 4 + 2,
           color, life: 1.0
         });
       }
-    }
-
-    function spawnObstacle() {
-      const type = Math.random() > 0.4 ? 'low' : 'high';
-      if (type === 'low') {
-        obstacles.push({ x: 800, y: 310, w: 30, h: 40, color: '#ff0055' });
-      } else {
-        obstacles.push({ x: 800, y: 230, w: 40, h: 30, color: '#ffaa00' });
-      }
-    }
-
-    function spawnItem() {
-      items.push({ x: 800, y: 220 + Math.random() * 60, size: 15, color: '#00f3ff' });
     }
 
     function gameLoop() {
       if (!gameRunning) return;
       frameCount++;
       score += 0.1;
-      gameSpeed += 0.001; // 점점 빨라짐
-      updateUI();
+      if (feverTimer > 0) { feverTimer--; score += 0.2; }
+      updateHUD();
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. 배경 그리기 (사이버펑크 그리드)
-      bgOffset = (bgOffset + gameSpeed) % 40;
-      ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)';
-      ctx.lineWidth = 1;
-      for (let x = -bgOffset; x < canvas.width; x += 40) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      // 1. 키보드/터치 이동 처리
+      if (player.isMovingLeft) player.x -= player.speed;
+      if (player.isMovingRight) player.x += player.speed;
+      player.x += (player.targetX - player.x) * 0.2; // 보드라운 부드러운 이동
+      player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+
+      // 2. 캐릭터 그리기
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      // 피버 상태 오라
+      if (feverTimer > 0) {
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.4)';
+        ctx.beginPath(); ctx.arc(0, 0, player.radius + 10, 0, Math.PI * 2); ctx.fill();
       }
-      // 바닥선
-      ctx.strokeStyle = '#00f3ff';
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 10; ctx.shadowColor = '#00f3ff';
-      ctx.beginPath(); ctx.moveTo(0, 350); ctx.lineTo(800, 350); ctx.stroke();
-      ctx.shadowBlur = 0;
+      // 캐릭터 본체
+      ctx.fillStyle = feverTimer > 0 ? '#fbbf24' : '#38bdf8';
+      ctx.beginPath(); ctx.arc(0, 0, player.radius, 0, Math.PI * 2); ctx.fill();
+      // 눈
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(-6, -4, 3, 0, Math.PI * 2);
+      ctx.arc(6, -4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
-      // 2. 플레이어 물리 및 그리기
-      player.vy += player.gravity;
-      player.y += player.vy;
+      // 3. 낙하물 생성 및 위치 이동
+      if (frameCount % Math.max(12, Math.floor(35 - score/50)) === 0) spawnObject();
 
-      if (player.y + player.h >= 350) {
-        player.y = 350 - player.h;
-        player.vy = 0;
-        player.isGrounded = true;
-      }
+      for (let i = fallingObjects.length - 1; i >= 0; i--) {
+        let obj = fallingObjects[i];
+        obj.y += obj.speed;
+        obj.rotation += obj.rotSpeed;
 
-      // 잔상 연출
-      player.trail.push({ x: player.x, y: player.y, w: player.w, h: player.h });
-      if (player.trail.length > 5) player.trail.shift();
-      player.trail.forEach((t, i) => {
-        ctx.fillStyle = `rgba(0, 243, 255, ${0.1 * i})`;
-        ctx.fillRect(t.x, t.y, t.w, t.h);
-      });
+        ctx.save();
+        ctx.translate(obj.x, obj.y);
+        ctx.rotate(obj.rotation);
 
-      // 플레이어 본체
-      ctx.fillStyle = '#00f3ff';
-      ctx.shadowBlur = 15; ctx.shadowColor = '#00f3ff';
-      ctx.fillRect(player.x, player.y, player.w, player.h);
-      ctx.shadowBlur = 0;
-
-      // 3. 장애물 처리
-      if (frameCount % Math.max(40, Math.floor(100 - gameSpeed * 3)) === 0) spawnObstacle();
-      if (frameCount % 120 === 0) spawnItem();
-
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        let ob = obstacles[i];
-        ob.x -= gameSpeed;
-
-        ctx.fillStyle = ob.color;
-        ctx.shadowBlur = 15; ctx.shadowColor = ob.color;
-        ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
-        ctx.shadowBlur = 0;
+        if (obj.type === 'poop' || obj.type === 'king_poop') {
+          // 똥 모양 아이콘 그리기
+          ctx.font = `${obj.size * 2}px sans-serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(obj.type === 'king_poop' ? '👑' : '💩', 0, 0);
+        } else if (obj.type === 'star') {
+          ctx.font = '28px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('⭐️', 0, 0);
+        } else if (obj.type === 'heal') {
+          ctx.font = '28px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('💊', 0, 0);
+        }
+        ctx.restore();
 
         // 충돌 체크
-        if (player.x < ob.x + ob.w && player.x + player.w > ob.x &&
-            player.y < ob.y + ob.h && player.y + player.h > ob.y) {
-          playSound('hit');
-          createParticles(player.x, player.y, '#ff0055', 20);
-          lives--;
-          obstacles.splice(i, 1);
-          updateUI();
-          if (lives <= 0) {
-            gameRunning = false;
-            document.getElementById('finalScoreText').textContent = `SCORE: ${Math.floor(score)}`;
-            document.getElementById('gameOverScreen').classList.remove('hidden');
+        let dist = Math.hypot(player.x - obj.x, player.y - obj.y);
+        if (dist < player.radius + obj.size * 0.7) {
+          if (obj.type === 'star') {
+            feverTimer = 240; // 4초 피버
+            playSound('fever');
+            createParticles(obj.x, obj.y, '#fbbf24', 20);
+          } else if (obj.type === 'heal') {
+            hp = Math.min(3, hp + 1);
+            playSound('item');
+            createParticles(obj.x, obj.y, '#4ade80', 15);
+          } else {
+            // 똥 충돌
+            if (feverTimer > 0) { // 피버 타임일 땐 똥 파괴
+              score += 20;
+              createParticles(obj.x, obj.y, '#a16207', 10);
+            } else {
+              hp--;
+              playSound('hit');
+              createParticles(player.x, player.y, '#f43f5e', 20);
+              if (hp <= 0) {
+                gameRunning = false;
+                document.getElementById('finalScoreText').textContent = `SCORE: ${Math.floor(score)}`;
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+                return;
+              }
+            }
           }
+          fallingObjects.splice(i, 1);
+          continue;
         }
 
-        if (ob.x + ob.w < 0) obstacles.splice(i, 1);
+        // 바닥 도착 시 제거
+        if (obj.y > canvas.height + 30) fallingObjects.splice(i, 1);
       }
 
-      // 4. 아이템 처리
-      for (let i = items.length - 1; i >= 0; i--) {
-        let it = items[i];
-        it.x -= gameSpeed;
-
-        ctx.fillStyle = it.color;
-        ctx.shadowBlur = 10; ctx.shadowColor = it.color;
-        ctx.beginPath();
-        ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // 획득 체크
-        let dist = Math.hypot((player.x + player.w/2) - it.x, (player.y + player.h/2) - it.y);
-        if (dist < player.w/2 + it.size) {
-          playSound('coin');
-          score += 50;
-          createParticles(it.x, it.y, '#00f3ff', 12);
-          items.splice(i, 1);
-        }
-
-        if (it.x < 0) items.splice(i, 1);
-      }
-
-      // 5. 파티클 이펙트 처리
+      // 4. 파티클 업데이트
       for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx; p.y += p.vy; p.life -= 0.03;
         if (p.life <= 0) { particles.splice(i, 1); continue; }
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.life;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1.0;
       }
 
