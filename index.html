@@ -3,277 +3,351 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>말랑 미용실 - 머리 자르기 게임</title>
+  <title>네온 사이버 러너 (Neon Runner)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #fbcfe8;
+      background: #090a0f;
+      color: #fff;
+      font-family: 'Pretendard', -apple-system, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 10px;
+      overflow: hidden;
     }
-    .salon-container {
-      background: white;
-      border-radius: 24px;
-      padding: 20px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    .game-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 450px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 50px rgba(0, 243, 255, 0.2), 0 0 20px rgba(255, 0, 85, 0.2);
+      border: 2px solid rgba(0, 243, 255, 0.3);
+      background: #000;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    
+    /* UI Overlay */
+    .ui-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      max-width: 420px;
-      width: 100%;
+      justify-content: space-between;
+      padding: 20px;
     }
-    h1 { font-size: 20px; color: #831843; margin-bottom: 12px; }
-    
-    /* 도구 아이콘 바 */
-    .toolbar {
+    .hud {
       display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-      width: 100%;
-      justify-content: center;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: 800;
+      text-shadow: 0 0 10px rgba(0, 243, 255, 0.8);
+      color: #00f3ff;
     }
-    .tool-btn {
-      flex: 1;
-      padding: 10px 4px;
-      border: 2px solid #f472b6;
-      background: white;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: bold;
-      color: #9d174d;
+    .start-screen, .game-over-screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(9, 10, 15, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: auto;
+      transition: opacity 0.3s;
+    }
+    .hidden { opacity: 0; pointer-events: none; }
+    h1 {
+      font-size: 40px;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, #00f3ff, #ff0055);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(0,243,255,0.5);
+    }
+    p { color: #a0aec0; margin-bottom: 25px; font-size: 15px; }
+    .btn {
+      padding: 14px 36px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #000;
+      background: #00f3ff;
+      border: none;
+      border-radius: 30px;
       cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
       transition: all 0.2s;
     }
-    .tool-btn.active {
-      background: #f472b6;
-      color: white;
-    }
-
-    /* 색상 팔레트 */
-    .color-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-    }
-    .color-dot {
-      width: 24px; height: 24px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    /* 캔버스 영역 */
-    canvas {
-      border-radius: 20px;
-      background: #fff1f2;
-      cursor: crosshair;
-      touch-action: none;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-    }
-
-    .reset-btn {
-      margin-top: 15px;
-      width: 100%;
-      padding: 12px;
-      background: #e11d48;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 243, 255, 0.9); }
   </style>
 </head>
 <body>
 
-  <div class="salon-container">
-    <h1>✂️ 말랑 헤어 뷰티샵 💇‍♀️</h1>
-
-    <div class="toolbar">
-      <button class="tool-btn active" onclick="setTool('scissors')">✂️ 가위</button>
-      <button class="tool-btn" onclick="setTool('grow')">🧪 쑥쑥약</button>
-      <button class="tool-btn" onclick="setTool('dye')">🎨 염색약</button>
+  <div class="game-wrapper">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    
+    <div class="ui-layer">
+      <div class="hud">
+        <div>SCORE: <span id="scoreText">0</span></div>
+        <div>LIVES: <span id="livesText">❤️❤️❤️</span></div>
+      </div>
     </div>
 
-    <div class="color-bar">
-      <div class="color-dot" style="background:#f59e0b;" onclick="setColor('#f59e0b')"></div>
-      <div class="color-dot" style="background:#ef4444;" onclick="setColor('#ef4444')"></div>
-      <div class="color-dot" style="background:#ec4899;" onclick="setColor('#ec4899')"></div>
-      <div class="color-dot" style="background:#3b82f6;" onclick="setColor('#3b82f6')"></div>
-      <div class="color-dot" style="background:#10b981;" onclick="setColor('#10b981')"></div>
-      <div class="color-dot" style="background:#1e293b;" onclick="setColor('#1e293b')"></div>
+    <div class="start-screen" id="startScreen">
+      <h1>NEON RUNNER</h1>
+      <p>점프: 스페이스바 / 화면 터치 | 슬라이딩: 아래 화살표</p>
+      <button class="btn" onclick="startGame()">GAME START</button>
     </div>
 
-    <canvas id="hairCanvas" width="360" height="420"></canvas>
-
-    <button class="reset-btn" onclick="initHair()">처음 상태로 되돌리기</button>
+    <div class="game-over-screen hidden" id="gameOverScreen">
+      <h1 style="background: linear-gradient(45deg, #ff0055, #ffaa00); -webkit-background-clip: text;">GAME OVER</h1>
+      <p id="finalScoreText">SCORE: 0</p>
+      <button class="btn" style="background:#ff0055; box-shadow: 0 0 20px rgba(255,0,85,0.6);" onclick="startGame()">RETRY</button>
+    </div>
   </div>
 
   <script>
-    const canvas = document.getElementById('hairCanvas');
+    // Web Audio API 효과음 엔진
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function playSound(type) {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+      if (type === 'jump') {
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+      } else if (type === 'coin') {
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.setValueAtTime(1200, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      } else if (type === 'hit') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.2);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      }
+    }
+
+    const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    let currentTool = 'scissors';
-    let currentColor = '#f59e0b';
-    let isDrawing = false;
+    let gameRunning = false;
+    let score = 0;
+    let lives = 3;
+    let gameSpeed = 6;
+    let frameCount = 0;
 
-    // 머리카락 줄기 데이터
-    let hairs = [];
-    const HAIR_COUNT = 90; // 머리카락 가닥 수
+    // 플레이어 객체
+    const player = {
+      x: 100, y: 300, w: 40, h: 50,
+      vy: 0, gravity: 0.8, jumpPower: -14,
+      isGrounded: false, isCrouching: false,
+      trail: []
+    };
 
-    function setTool(tool) {
-      currentTool = tool;
-      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+    let obstacles = [];
+    let items = [];
+    let particles = [];
+
+    // 배경 그리드 선
+    let bgOffset = 0;
+
+    function startGame() {
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('gameOverScreen').classList.add('hidden');
+      
+      score = 0; lives = 3; gameSpeed = 6; frameCount = 0;
+      obstacles = []; items = []; particles = [];
+      player.y = 300; player.vy = 0;
+      
+      updateUI();
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
     }
 
-    function setColor(color) {
-      currentColor = color;
+    function updateUI() {
+      document.getElementById('scoreText').textContent = Math.floor(score);
+      document.getElementById('livesText').textContent = '❤️'.repeat(lives);
     }
 
-    // 초기 머리카락 생성
-    function initHair() {
-      hairs = [];
-      const startX = 80;
-      const endX = 280;
-      const step = (endX - startX) / HAIR_COUNT;
+    // 입력 이벤트
+    function handleJump() {
+      if (!gameRunning) return;
+      if (player.isGrounded) {
+        player.vy = player.jumpPower;
+        player.isGrounded = false;
+        playSound('jump');
+        createParticles(player.x + player.w/2, player.y + player.h, '#00f3ff', 10);
+      }
+    }
 
-      for (let i = 0; i < HAIR_COUNT; i++) {
-        let x = startX + i * step;
-        let points = [];
-        let length = 180 + Math.random() * 40; // 머리 길이
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') handleJump();
+      if (e.code === 'ArrowDown') { player.isCrouching = true; player.h = 25; }
+    });
 
-        for (let j = 0; j < length; j += 5) {
-          points.push({
-            x: x + Math.sin(j * 0.05) * 3, // 약간의 곱슬 느낌
-            y: 110 + j
-          });
-        }
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowDown') { player.isCrouching = false; player.h = 50; }
+    });
 
-        hairs.push({
-          points: points,
-          color: currentColor,
-          maxLen: length
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleJump(); });
+
+    function createParticles(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          size: Math.random() * 4 + 2,
+          color, life: 1.0
         });
       }
-      drawScene();
     }
 
-    // 캐릭터 및 머리카락 그리기
-    function drawScene() {
+    function spawnObstacle() {
+      const type = Math.random() > 0.4 ? 'low' : 'high';
+      if (type === 'low') {
+        obstacles.push({ x: 800, y: 310, w: 30, h: 40, color: '#ff0055' });
+      } else {
+        obstacles.push({ x: 800, y: 230, w: 40, h: 30, color: '#ffaa00' });
+      }
+    }
+
+    function spawnItem() {
+      items.push({ x: 800, y: 220 + Math.random() * 60, size: 15, color: '#00f3ff' });
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      frameCount++;
+      score += 0.1;
+      gameSpeed += 0.001; // 점점 빨라짐
+      updateUI();
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. 캐릭터 얼굴 그리기
-      // 목
-      ctx.fillStyle = '#fde047';
-      ctx.fillRect(165, 230, 30, 50);
-      
-      // 얼굴
-      ctx.fillStyle = '#ffedd5';
-      ctx.beginPath();
-      ctx.arc(180, 170, 65, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 눈 & 입
-      ctx.fillStyle = '#334155';
-      ctx.beginPath();
-      ctx.arc(155, 165, 6, 0, Math.PI * 2); // 왼쪽 눈
-      ctx.arc(205, 165, 6, 0, Math.PI * 2); // 오른쪽 눈
-      ctx.fill();
-
-      // 볼터치
-      ctx.fillStyle = '#f43f5e';
-      ctx.globalAlpha = 0.3;
-      ctx.beginPath();
-      ctx.arc(145, 180, 10, 0, Math.PI * 2);
-      ctx.arc(215, 180, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1.0;
-
-      // 웃는 입
-      ctx.strokeStyle = '#f43f5e';
+      // 1. 배경 그리기 (사이버펑크 그리드)
+      bgOffset = (bgOffset + gameSpeed) % 40;
+      ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)';
+      ctx.lineWidth = 1;
+      for (let x = -bgOffset; x < canvas.width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      // 바닥선
+      ctx.strokeStyle = '#00f3ff';
       ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(180, 180, 12, 0.2, Math.PI - 0.2);
-      ctx.stroke();
+      ctx.shadowBlur = 10; ctx.shadowColor = '#00f3ff';
+      ctx.beginPath(); ctx.moveTo(0, 350); ctx.lineTo(800, 350); ctx.stroke();
+      ctx.shadowBlur = 0;
 
-      // 2. 머리카락 그리기
-      hairs.forEach(hair => {
-        if (hair.points.length < 2) return;
+      // 2. 플레이어 물리 및 그리기
+      player.vy += player.gravity;
+      player.y += player.vy;
 
-        ctx.strokeStyle = hair.color;
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
+      if (player.y + player.h >= 350) {
+        player.y = 350 - player.h;
+        player.vy = 0;
+        player.isGrounded = true;
+      }
+
+      // 잔상 연출
+      player.trail.push({ x: player.x, y: player.y, w: player.w, h: player.h });
+      if (player.trail.length > 5) player.trail.shift();
+      player.trail.forEach((t, i) => {
+        ctx.fillStyle = `rgba(0, 243, 255, ${0.1 * i})`;
+        ctx.fillRect(t.x, t.y, t.w, t.h);
+      });
+
+      // 플레이어 본체
+      ctx.fillStyle = '#00f3ff';
+      ctx.shadowBlur = 15; ctx.shadowColor = '#00f3ff';
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.shadowBlur = 0;
+
+      // 3. 장애물 처리
+      if (frameCount % Math.max(40, Math.floor(100 - gameSpeed * 3)) === 0) spawnObstacle();
+      if (frameCount % 120 === 0) spawnItem();
+
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        let ob = obstacles[i];
+        ob.x -= gameSpeed;
+
+        ctx.fillStyle = ob.color;
+        ctx.shadowBlur = 15; ctx.shadowColor = ob.color;
+        ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+        ctx.shadowBlur = 0;
+
+        // 충돌 체크
+        if (player.x < ob.x + ob.w && player.x + player.w > ob.x &&
+            player.y < ob.y + ob.h && player.y + player.h > ob.y) {
+          playSound('hit');
+          createParticles(player.x, player.y, '#ff0055', 20);
+          lives--;
+          obstacles.splice(i, 1);
+          updateUI();
+          if (lives <= 0) {
+            gameRunning = false;
+            document.getElementById('finalScoreText').textContent = `SCORE: ${Math.floor(score)}`;
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+          }
+        }
+
+        if (ob.x + ob.w < 0) obstacles.splice(i, 1);
+      }
+
+      // 4. 아이템 처리
+      for (let i = items.length - 1; i >= 0; i--) {
+        let it = items[i];
+        it.x -= gameSpeed;
+
+        ctx.fillStyle = it.color;
+        ctx.shadowBlur = 10; ctx.shadowColor = it.color;
         ctx.beginPath();
-        ctx.moveTo(hair.points[0].x, hair.points[0].y);
+        ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
 
-        for (let i = 1; i < hair.points.length; i++) {
-          ctx.lineTo(hair.points[i].x, hair.points[i].y);
+        // 획득 체크
+        let dist = Math.hypot((player.x + player.w/2) - it.x, (player.y + player.h/2) - it.y);
+        if (dist < player.w/2 + it.size) {
+          playSound('coin');
+          score += 50;
+          createParticles(it.x, it.y, '#00f3ff', 12);
+          items.splice(i, 1);
         }
-        ctx.stroke();
-      });
+
+        if (it.x < 0) items.splice(i, 1);
+      }
+
+      // 5. 파티클 이펙트 처리
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+        ctx.globalAlpha = 1.0;
+      }
+
+      requestAnimationFrame(gameLoop);
     }
-
-    // 마우스/터치 인터랙션 처리
-    function handleAction(x, y) {
-      hairs.forEach(hair => {
-        for (let i = hair.points.length - 1; i >= 0; i--) {
-          let p = hair.points[i];
-          let dist = Math.hypot(p.x - x, p.y - y);
-
-          // 1. 가위: 마우스 근처 머리카락 잘라내기
-          if (currentTool === 'scissors' && dist < 15) {
-            hair.points = hair.points.slice(0, i);
-            break;
-          }
-          
-          // 2. 쑥쑥약: 머리카락 다시 자라게 하기
-          if (currentTool === 'grow' && dist < 25) {
-            if (hair.points.length * 5 < hair.maxLen) {
-              let lastP = hair.points[hair.points.length - 1] || { x: p.x, y: 110 };
-              hair.points.push({
-                x: lastP.x + (Math.random() - 0.5) * 2,
-                y: lastP.y + 5
-              });
-            }
-          }
-
-          // 3. 염색약: 머리카락 색상 변경
-          if (currentTool === 'dye' && dist < 20) {
-            hair.color = currentColor;
-          }
-        }
-      });
-
-      drawScene();
-    }
-
-    // 이벤트 리스너 (PC 마우스 & 모바일 터치 지원)
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
-
-    canvas.addEventListener('mousedown', (e) => { isDrawing = true; const pos = getPos(e); handleAction(pos.x, pos.y); });
-    canvas.addEventListener('mousemove', (e) => { if (isDrawing) { const pos = getPos(e); handleAction(pos.x, pos.y); } });
-    window.addEventListener('mouseup', () => isDrawing = false);
-
-    canvas.addEventListener('touchstart', (e) => { isDrawing = true; const pos = getPos(e); handleAction(pos.x, pos.y); });
-    canvas.addEventListener('touchmove', (e) => { if (isDrawing) { const pos = getPos(e); handleAction(pos.x, pos.y); } });
-    window.addEventListener('touchend', () => isDrawing = false);
-
-    // 실행
-    initHair();
   </script>
 </body>
 </html>
